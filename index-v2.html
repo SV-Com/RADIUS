@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios FTTH - FreeRADIUS v2.0</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <h2>🔐 Acceso al Sistema</h2>
+        <div id="loginAlert"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>API Key:</label>
+                <input type="password" id="apiKeyInput" required placeholder="Ingresa tu API Key">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Iniciar Sesión</button>
+        </form>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>🌐 Gestión de Usuarios FTTH</h1>
+                <p>Sistema de administración FreeRADIUS para red PPPoE v2.0</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number" id="totalUsers">0</div>
+                    <div class="label">Total Usuarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="activeSessions">0</div>
+                    <div class="label">Sesiones Activas</div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('users')">👥 Usuarios</button>
+                <button class="tab-btn" onclick="showTab('webhooks')">🔗 Webhooks</button>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="usersTab" class="tab-content active">
+                <div class="main-content">
+                    <div class="actions-bar">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="openCreateUserModal()">
+                                ➕ Crear Usuario
+                            </button>
+                            <button class="btn btn-success" onclick="exportUsers('csv')">
+                                📥 Exportar CSV
+                            </button>
+                        </div>
+                        <input type="text" class="search-box" id="searchInput" placeholder="🔍 Buscar usuario...">
+                        <button class="btn btn-danger" onclick="logout()">
+                            🚪 Cerrar Sesión
+                        </button>
+                    </div>
+
+                    <div id="alertContainer"></div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Contraseña</th>
+                                    <th>Atributos</th>
+                                    <th>Historial</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="5" class="loading">
+                                        <div class="spinner"></div>
+                                        Cargando usuarios...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Webhooks Tab -->
+            <div id="webhooksTab" class="tab-content">
+                <div class="main-content">
+                    <div class="actions-bar">
+                        <button class="btn btn-primary" onclick="openWebhookModal()">
+                            ➕ Crear Webhook
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>URL</th>
+                                    <th>Eventos</th>
+                                    <th>Creado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="webhooksTableBody">
+                                <tr>
+                                    <td colspan="4" class="loading">
+                                        <div class="spinner"></div>
+                                        Cargando webhooks...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Crear Usuario</h2>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label>Usuario (PPPoE):</label>
+                    <input type="text" id="username" required placeholder="usuario@dominio">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="text" id="password" required placeholder="Contraseña">
+                </div>
+                <div class="form-group">
+                    <label>Velocidad Upload:</label>
+                    <input type="text" id="bandwidthUp" value="10M" placeholder="10M, 20M, 50M, 100M">
+                    <small style="color: #666; display: block; margin-top: 5px;">Formato: Kbps (ej: 10240) o Mbps (ej: 10M)</small>
+                </div>
+                <div class="form-group">
+                    <label>Velocidad Download:</label>
+                    <input type="text" id="bandwidthDown" value="10M" placeholder="10M, 20M, 50M, 100M">
+                    <small style="color: #666; display: block; margin-top: 5px;">Formato: Kbps (ej: 10240) o Mbps (ej: 10M)</small>
+                </div>
+                <div class="form-group">
+                    <label>Perfil (opcional):</label>
+                    <input type="text" id="profile" placeholder="default, premium, etc.">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Historial de Conexiones</h2>
+                <h3 id="historyUsername"></h3>
+            </div>
+
+            <div class="chart-container">
+                <h3>Uso de Ancho de Banda (Últimos 30 días)</h3>
+                <canvas id="bandwidthChart" width="800" height="300"></canvas>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Duración</th>
+                            <th>Upload</th>
+                            <th>Download</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook Modal -->
+    <div id="webhookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Webhook</h2>
+            </div>
+            <form id="webhookForm">
+                <div class="form-group">
+                    <label>URL del Webhook:</label>
+                    <input type="url" id="webhookUrl" required placeholder="https://tu-servidor.com/webhook">
+                </div>
+                <div class="form-group">
+                    <label>Eventos:</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" name="events" value="user.created"> Usuario Creado
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" name="events" value="user.updated"> Usuario Actualizado
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" name="events" value="user.deleted"> Usuario Eliminado
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Tabs functionality
+        function showTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Load data for the tab
+            if (tabName === 'webhooks') {
+                loadWebhooks();
+            }
+        }
+
+        // Webhook form submission
+        document.getElementById('webhookForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = document.getElementById('webhookUrl').value;
+            const checkboxes = document.querySelectorAll('input[name="events"]:checked');
+            const events = Array.from(checkboxes).map(cb => cb.value);
+
+            if (events.length === 0) {
+                showAlert('Selecciona al menos un evento', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/webhooks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiToken}`
+                    },
+                    body: JSON.stringify({ url, events })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Webhook creado exitosamente', 'success');
+                    closeModal();
+                    loadWebhooks();
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Error al crear webhook', 'error');
+            }
+        });
+
+        function openWebhookModal() {
+            document.getElementById('webhookForm').reset();
+            document.getElementById('webhookModal').classList.add('active');
+        }
+    </script>
+</body>
+</html>
