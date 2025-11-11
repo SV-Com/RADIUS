@@ -1,8 +1,21 @@
-# Sistema de Gestión Web para FreeRADIUS/DaloRADIUS
+# Sistema de Gestión Web para FreeRADIUS/DaloRADIUS v2.0
 
-Sistema web completo para crear y gestionar usuarios PPPoE de FreeRADIUS sin necesidad de acceder a DaloRADIUS.
+Sistema web completo para crear y gestionar usuarios PPPoE de FreeRADIUS con funcionalidades avanzadas.
 
-## 📋 Características
+## 🎉 Versión 2.0 - Nuevas Funcionalidades
+
+### ✨ Características Nuevas
+- ✅ **Edición completa de usuarios** desde la interfaz web
+- ✅ **Exportación a CSV/Excel** de todos los usuarios
+- ✅ **Gráficos de uso de ancho de banda** con visualización histórica
+- ✅ **Historial completo de conexiones** por usuario
+- ✅ **Sistema de roles y permisos** (Admin, Operator, Viewer)
+- ✅ **Notificaciones por email** para eventos importantes
+- ✅ **Webhooks API** para integraciones con sistemas externos
+- ✅ **Audit log** completo de todas las acciones
+- ✅ **Interfaz mejorada** con tabs y mejor UX
+
+## 📋 Características Core
 
 - ✅ Crear usuarios PPPoE vía API REST
 - ✅ Gestionar velocidades de upload/download por usuario
@@ -13,20 +26,56 @@ Sistema web completo para crear y gestionar usuarios PPPoE de FreeRADIUS sin nec
 - ✅ Interfaz web moderna y responsive
 - ✅ Compatible con equipos Huawei (NE8000-F1A)
 
-## 🚀 Instalación
+## 🚀 Instalación Rápida
+
+### Instalación Automática en Debian 12 / Ubuntu (Recomendado)
+
+```bash
+# Descargar e instalar automáticamente
+wget https://raw.githubusercontent.com/SV-Com/RADIUS/main/install-debian12.sh
+chmod +x install-debian12.sh
+sudo bash install-debian12.sh
+```
+
+El script instalará y configurará automáticamente:
+- ✅ Apache2
+- ✅ PHP 8.2 con todas las extensiones
+- ✅ MariaDB
+- ✅ FreeRADIUS
+- ✅ Sistema RADIUS Web Manager v2.0
+- ✅ Base de datos configurada
+- ✅ VirtualHost de Apache
+
+**Documentación completa:**
+- 📖 [Guía de Instalación Paso a Paso](INSTALL_GUIDE.md)
+- 📖 [Documentación v2.0](README_V2.md)
+
+### Verificar Instalación
+
+```bash
+# Descargar y ejecutar script de verificación
+wget https://raw.githubusercontent.com/SV-Com/RADIUS/main/verify-installation.sh
+bash verify-installation.sh
+```
+
+---
+
+## 📦 Instalación Manual
 
 ### Paso 1: Copiar archivos al servidor
 
-Copia los archivos al directorio web de tu servidor:
-
 ```bash
 # Si usas Apache
-cp radius-api.php /var/www/html/
-cp index.html /var/www/html/
+cp radius-api.php /var/www/html/radius/
+cp index-v2.html /var/www/html/radius/index.html
+cp app.js /var/www/html/radius/
+cp styles.css /var/www/html/radius/
 
 # Si usas Nginx
-cp radius-api.php /usr/share/nginx/html/
-cp index.html /usr/share/nginx/html/
+cp radius-api.php /usr/share/nginx/html/radius/
+cp index-v2.html /usr/share/nginx/html/radius/index.html
+cp app.js /usr/share/nginx/html/radius/
+cp styles.css /usr/share/nginx/html/radius/
 ```
 
 ### Paso 2: Configurar la API
